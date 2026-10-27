@@ -1,0 +1,355 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Тайное свидание</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Onest:wght@400;500;600&display=swap">
+<style>
+  /* Layout: one centered sealed-letter card on a dark plum ground; four screens swap inside it (password, place, question, answer). */
+  :root {
+    --bg: #1c1219;
+    --surface: #291a24;
+    --fg: #f4e9e2;
+    --muted: #b8a2a8;
+    --accent: #e0475b;
+    --line: #4a3340;
+    --on-accent: #fff7f5;
+    --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --font-body: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-block: 24px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 36px 28px 32px;
+    position: relative;
+  }
+  .seal {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid; place-items: center;
+    margin-bottom: 22px;
+    box-shadow: 0 0 0 5px var(--surface), 0 0 0 6px var(--line);
+  }
+  .seal svg { width: 26px; height: 26px; fill: var(--on-accent); }
+  h1 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(2rem, 8vw, 2.6rem);
+    line-height: 1.08;
+    margin: 0 0 12px;
+    text-wrap: balance;
+    outline: none;
+  }
+  p { margin: 0 0 20px; color: var(--muted); max-width: 44ch; }
+  label.field { display: block; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  input[type="password"], input[type="text"], textarea {
+    width: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 14px;
+    font: inherit;
+    font-size: 1.05rem;
+  }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, .place input:focus-visible + .place-body {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .btn {
+    font: inherit;
+    font-weight: 600;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+    padding: 13px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+  .btn.ghost:hover:not(:disabled) { border-color: var(--muted); }
+  .hint { font-size: 0.9rem; color: var(--muted); margin: 12px 0 0; }
+  .error { color: #ff9aa8; min-height: 1.4em; margin: 10px 0 0; font-size: 0.95rem; }
+  .shake { animation: shake 0.4s; }
+  @keyframes shake { 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+
+  .places { display: grid; gap: 10px; margin: 20px 0 0; padding: 0; border: 0; min-width: 0; }
+  .place { display: block; cursor: pointer; }
+  .place input { position: absolute; opacity: 0; pointer-events: none; }
+  .place-body {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: var(--bg);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .place:hover .place-body { border-color: var(--muted); }
+  .place input:checked + .place-body { border-color: var(--accent); background: #3a1f2b; }
+  .place-title { display: block; font-weight: 600; }
+  .place-note { display: block; color: var(--muted); font-size: 0.92rem; }
+
+  .chosen { font-family: var(--font-display); font-style: italic; font-size: 1.25rem; color: var(--fg); margin: 0 0 6px; }
+  .stage {
+    position: relative;
+    height: 240px;
+    margin-top: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .stage .btn { position: absolute; margin: 0; }
+  #no { transition: left 0.16s ease-out, top 0.16s ease-out; background: transparent; color: var(--fg); border-color: var(--muted); }
+  #yes { transform-origin: center; transition: transform 0.2s; }
+  .status { min-height: 1.5em; margin: 14px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+  .summary { margin-top: 8px; }
+  .summary textarea { resize: none; height: 96px; font-size: 0.95rem; }
+  #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+  @media (max-width: 420px) { .card { padding: 28px 18px 24px; } }
+  @media (prefers-reduced-motion: reduce) { #no, #yes { transition: none; } .shake { animation: none; } }
+</style>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<main class="card">
+  <div class="seal" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.8 4.5 6.5 4.5c2.1 0 3.7 1.1 5.5 3.2 1.8-2.1 3.4-3.2 5.5-3.2 3.7 0 5.6 3.9 4.1 7.3C19.5 16.4 12 21 12 21z"/></svg>
+  </div>
+
+  <section id="s-lock">
+    <h1 tabindex="-1">Это письмо только для тебя</h1>
+    <p>Чтобы открыть его, введи слово, которое знаем только мы.</p>
+    <form id="lock-form" autocomplete="off">
+      <label class="field" for="pw">Пароль</label>
+      <input id="pw" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="pw-error">
+      <p id="pw-error" class="error" role="alert"></p>
+      <div class="row"><button class="btn" type="submit" id="open">Открыть</button></div>
+      <p class="hint" id="hint"></p>
+    </form>
+  </section>
+
+  <section id="s-place" hidden>
+    <h1 tabindex="-1">Куда пойдём?</h1>
+    <p>Выбери место, остальное я возьму на себя.</p>
+    <fieldset class="places" id="places"><legend class="sr" style="position:absolute;left:-9999px">Место свидания</legend></fieldset>
+    <div class="row"><button class="btn" type="button" id="to-ask" disabled>Дальше</button></div>
+  </section>
+
+  <section id="s-ask" hidden>
+    <h1 tabindex="-1">Пойдёшь со мной на свидание?</h1>
+    <p class="chosen" id="chosen"></p>
+    <div class="stage" id="stage">
+      <button class="btn" type="button" id="yes">Да</button>
+      <button class="btn" type="button" id="no">Нет</button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <section id="s-yes" hidden>
+    <h1 tabindex="-1">Договорились</h1>
+    <p id="yes-text"></p>
+    <div class="summary">
+      <label class="field" for="summary">Ответ для сообщения</label>
+      <textarea id="summary" readonly></textarea>
+      <div class="row"><button class="btn" type="button" id="copy">Скопировать ответ</button></div>
+      <p class="status" id="copy-status" aria-live="polite"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  // Настройки: поменяйте пароль, подсказку и список мест под себя.
+  var CONFIG = {
+    password: "asia",
+    hint: "Подсказка: слово из 4 букв, которое мы оба знаем(ps. как себя назывешь обычно в инсте).",
+    places: [
+      { id: "dinner", title: "Ужин при свечах", note: "Дома, вечер, столик у окна" },
+      { id: "cinema", title: "Кино и попкорн", note: "Любой фильм, который выберешь ты" },
+      { id: "picnic", title: "Пикник в парке", note: "Плед, фрукты и никаких телефонов" },
+      { id: "surprise", title: "Сюрприз", note: "Место узнаешь только на месте" }
+    ]
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var screens = ["s-lock", "s-place", "s-ask", "s-yes"];
+  var chosenPlace = null;
+
+  function show(id) {
+    screens.forEach(function (s) { $(s).hidden = (s !== id); });
+    var h = $(id).querySelector("h1");
+    if (h) h.focus({ preventScroll: true });
+    if (id === "s-ask") layoutButtons();
+  }
+  function norm(s) { return String(s).trim().toLowerCase().replace(/ё/g, "е"); }
+
+  // 1. Пароль
+  $("hint").textContent = CONFIG.hint;
+  $("lock-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var input = $("pw");
+    if (norm(input.value) === norm(CONFIG.password)) {
+      $("pw-error").textContent = "";
+      show("s-place");
+    } else {
+      $("pw-error").textContent = "Не подходит. Попробуй ещё раз.";
+      var f = $("lock-form");
+      f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake");
+      input.select();
+    }
+  });
+
+  // 2. Место
+  var placesEl = $("places");
+  CONFIG.places.forEach(function (p) {
+    var l = document.createElement("label");
+    l.className = "place";
+    l.innerHTML = '<input type="radio" name="place" value="' + p.id + '"><span class="place-body"><span class="place-title"></span><span class="place-note"></span></span>';
+    l.querySelector(".place-title").textContent = p.title;
+    l.querySelector(".place-note").textContent = p.note;
+    l.querySelector("input").addEventListener("change", function () {
+      chosenPlace = p;
+      $("to-ask").disabled = false;
+    });
+    placesEl.appendChild(l);
+  });
+  $("to-ask").addEventListener("click", function () {
+    if (!chosenPlace) return;
+    $("chosen").textContent = chosenPlace.title;
+    show("s-ask");
+  });
+
+  // 3. Да / Нет (кнопка «Нет» убегает)
+  var stage = $("stage"), yes = $("yes"), no = $("no");
+  var dodges = 0, pointer = null;
+  var phrases = [
+    "",
+    "Эта кнопка шустрая.",
+    "Почти поймал.",
+    "Она явно не хочет, чтобы её нажали.",
+    "Может, всё-таки «Да»?",
+    "Кнопка «Да» уже выросла. Намёк понятен.",
+    "Попыток уже много. Но я подожду.",
+    "Ты упорная. Мне это нравится."
+  ];
+
+  function rect(el) { return { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }; }
+  function layoutButtons() {
+    var W = stage.clientWidth, H = stage.clientHeight;
+    var yw = yes.offsetWidth, nw = no.offsetWidth, hh = yes.offsetHeight;
+    var gap = 16, total = yw + nw + gap, startX = Math.max(8, (W - total) / 2);
+    yes.style.left = startX + "px";
+    yes.style.top = ((H - hh) / 2) + "px";
+    no.style.left = (startX + yw + gap) + "px";
+    no.style.top = ((H - no.offsetHeight) / 2) + "px";
+  }
+  function overlaps(a, b, m) {
+    return a.x < b.x + b.w + m && a.x + a.w + m > b.x && a.y < b.y + b.h + m && a.y + a.h + m > b.y;
+  }
+  function dodge() {
+    dodges++;
+    var W = stage.clientWidth, H = stage.clientHeight;
+    var nw = no.offsetWidth, nh = no.offsetHeight;
+    var maxX = Math.max(0, W - nw - 4), maxY = Math.max(0, H - nh - 4);
+    var yr = rect(yes);
+    var s = 1 + 0.07 * Math.min(dodges, 8);
+    yr = { x: yr.x - (yr.w * (s - 1)) / 2, y: yr.y - (yr.h * (s - 1)) / 2, w: yr.w * s, h: yr.h * s };
+    var best = null, bestD = -1;
+    for (var i = 0; i < 40; i++) {
+      var c = { x: 4 + Math.random() * maxX, y: 4 + Math.random() * maxY, w: nw, h: nh };
+      if (overlaps(c, yr, 10)) continue;
+      var d = pointer ? Math.hypot(c.x + nw / 2 - pointer.x, c.y + nh / 2 - pointer.y) : 200;
+      if (d > bestD) { bestD = d; best = c; }
+      if (d > 150) break;
+    }
+    if (!best) best = { x: maxX, y: maxY, w: nw, h: nh };
+    no.style.left = best.x + "px";
+    no.style.top = best.y + "px";
+    yes.style.transform = "scale(" + s + ")";
+    $("status").textContent = phrases[Math.min(dodges, phrases.length - 1)];
+  }
+  function setPointer(e) {
+    var r = stage.getBoundingClientRect();
+    pointer = { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  stage.addEventListener("pointermove", function (e) {
+    setPointer(e);
+    var n = rect(no);
+    var d = Math.hypot(pointer.x - (n.x + n.w / 2), pointer.y - (n.y + n.h / 2));
+    if (d < Math.max(n.w, n.h) * 0.9 + 24) dodge();
+  });
+  ["pointerdown", "touchstart", "mousedown"].forEach(function (t) {
+    no.addEventListener(t, function (e) { if (e.cancelable) e.preventDefault(); if (e.clientX !== undefined) setPointer(e); dodge(); }, { passive: false });
+  });
+  no.addEventListener("focus", dodge);
+  no.addEventListener("click", function (e) { e.preventDefault(); dodge(); });
+  window.addEventListener("resize", function () { if (!$("s-ask").hidden) { dodges = 0; yes.style.transform = ""; layoutButtons(); } });
+
+  // 4. Ответ «Да»
+  yes.addEventListener("click", function () {
+    $("yes-text").textContent = "Место: " + chosenPlace.title + ". Время и детали согласуем. Я уже жду.";
+    $("summary").value = "Да! Идём на свидание. Место: " + chosenPlace.title + ".";
+    show("s-yes");
+    burst();
+  });
+  $("copy").addEventListener("click", function () {
+    var t = $("summary"), st = $("copy-status");
+    function fallback() { t.focus(); t.select(); st.textContent = "Текст выделен, скопируй его вручную."; }
+    try {
+      navigator.clipboard.writeText(t.value).then(function () { st.textContent = "Скопировано. Отправь это в сообщении."; }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  // Сердечки
+  function burst() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var cv = $("confetti"), ctx = cv.getContext("2d");
+    cv.width = window.innerWidth; cv.height = window.innerHeight;
+    var ps = [];
+    for (var i = 0; i < 70; i++) ps.push({
+      x: cv.width / 2 + (Math.random() - 0.5) * 120, y: cv.height * 0.55,
+      vx: (Math.random() - 0.5) * 9, vy: -Math.random() * 11 - 3,
+      s: 14 + Math.random() * 18, a: 1, c: Math.random() < 0.7 ? "#e0475b" : "#f4e9e2"
+    });
+    var t0 = performance.now();
+    (function tick(now) {
+      var el = now - t0;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(function (p) {
+        p.vy += 0.32; p.x += p.vx; p.y += p.vy; p.a = Math.max(0, 1 - el / 2600);
+        ctx.globalAlpha = p.a; ctx.fillStyle = p.c; ctx.font = p.s + "px sans-serif";
+        ctx.fillText("♥", p.x, p.y);
+      });
+      if (el < 2600) requestAnimationFrame(tick); else ctx.clearRect(0, 0, cv.width, cv.height);
+    })(t0);
+  }
+})();
+</script>
+
+</body></html>
